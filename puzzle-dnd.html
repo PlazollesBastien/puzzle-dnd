@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Tubes - D&D</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+            padding: 20px; color: #e0e0e0;
+        }
+        .edge-marker {
+            position: absolute; width: 30px; height: 30px;
+            background: rgba(255, 255, 255, 0.2); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1em; z-index: 10; border: 2px solid;
+            pointer-events: none;
+        }
+        .edge-marker.start { color: #ff6b6b; border-color: #ff6b6b; background: rgba(255, 107, 107, 0.4); }
+        .edge-marker.end { color: #4ecdc4; border-color: #4ecdc4; background: rgba(78, 205, 196, 0.4); }
+        h1 { margin-bottom: 20px; color: #ff6b6b; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); font-size: 2.5em; }
+        .game-container { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+        .controls {
+            background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; width: 300px;
+            backdrop-filter: blur(10px);
+        }
+        .controls h2 { color: #4ecdc4; margin-bottom: 15px; font-size: 1.5em; text-align: center; }
+        .button-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        button {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); border: none; border-radius: 8px;
+            padding: 12px 20px; color: #1a1a2e; font-size: 1em; font-weight: bold; cursor: pointer;
+            transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(78,205,196,0.4); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .difficulty-selector { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .difficulty-btn { padding: 8px 15px; font-size: 0.9em; width: 70px; }
+        .difficulty-btn.active { background: #ff6b6b; box-shadow: 0 0 10px rgba(255,107,107,0.5); }
+        .stats { background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px; margin-top: 20px; }
+        .stats h3 { color: #ff6b6b; margin-bottom: 10px; font-size: 1.1em; }
+        .stat-row { display: flex; justify-content: space-between; margin: 5px 0; color: #a0a0a0; }
+        .stat-value { color: #4ecdc4; font-weight: bold; }
+        .grid-container { display: flex; flex-direction: column; align-items: center; }
+        .grid-wrapper { position: relative; margin: 20px 0; min-height: 670px; min-width: 670px; overflow: auto; max-width: 100%; }
+        .grid { display: grid; grid-template-columns: repeat(16, 40px); grid-template-rows: repeat(16, 40px); gap: 2px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 15px; }
+        .cell { width: 40px; height: 40px; background: rgba(255,255,255,0.05); border: 1px solid rgba(78,205,196,0.3); border-radius: 5px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; user-select: none; }
+        .cell:hover { background: rgba(255,255,255,0.1); border-color: #4ecdc4; transform: scale(1.1); }
+        .cell.selected { background: rgba(78,205,196,0.2); border-color: #4ecdc4; box-shadow: 0 0 15px rgba(78,205,196,0.5); }
+        .cell.connected { background: rgba(78,205,196,0.15); border-color: #4ecdc4; }
+        .cell.path { background: linear-gradient(135deg, rgba(78,205,196,0.3), rgba(255,107,107,0.2)); border-color: #ff6b6b; box-shadow: 0 0 10px rgba(78,205,196,0.5); }
+        .cell.edge-connected { background: rgba(255, 255, 255, 0.15); border-color: #ff6b6b; box-shadow: 0 0 8px rgba(255, 107, 107, 0.6); }
+        .pipe { font-size: 1.5em; color: #4ecdc4; transition: transform 0.3s; text-shadow: 0 0 5px rgba(78,205,196,0.5); font-family: monospace; line-height: 1; }
+        .message { background: rgba(0,0,0,0.5); border-radius: 10px; padding: 15px 30px; margin: 20px 0; text-align: center; font-size: 1.2em; min-height: 60px; display: flex; align-items: center; justify-content: center; }
+        .message.success { color: #4ecdc4; background: rgba(78,205,196,0.1); border: 2px solid #4ecdc4; }
+        .message.error { color: #ff6b6b; background: rgba(255,107,107,0.1); border: 2px solid #ff6b6b; }
+        .message.info { color: #a0a0a0; }
+        .timer { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; text-align: center; margin-top: 10px; color: #ff6b6b; font-size: 1.2em; font-weight: bold; }
+        .solve-hint { margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; text-align: center; color: #a0a0a0; font-size: 0.9em; }
+        .loading-indicator { display: none; text-align: center; margin: 10px 0; color: #4ecdc4; font-style: italic; }
+        @media (max-width: 900px) {
+            .game-container { flex-direction: column; align-items: center; }
+            .controls { width: 100%; max-width: 500px; }
+            .grid { grid-template-columns: repeat(16, 25px); grid-template-rows: repeat(16, 25px); }
+            .cell { width: 25px; height: 25px; }
+            .pipe { font-size: 1em; }
+            .grid-wrapper { min-height: 420px; min-width: 420px; }
+            .edge-marker { width: 20px; height: 20px; font-size: 0.8em; }
+        }
+    </style>
+</head>
+<body>
+    <h1>🧩 Puzzle Tubes D&D</h1>
+    <div class="game-container">
+        <div class="controls">
+            <h2>⚙️ Contrôles</h2>
+            <div class="difficulty-selector">
+                <button class="difficulty-btn" data-difficulty="easy" onclick="setDifficulty('easy')">Facile</button>
+                <button class="difficulty-btn" data-difficulty="medium" onclick="setDifficulty('medium')">Moyen</button>
+                <button class="difficulty-btn active" data-difficulty="hard" onclick="setDifficulty('hard')">Difficile</button>
+            </div>
+            <div class="button-group">
+                <button onclick="newGame()" id="newGameBtn">Nouvelle Partie</button>
+                <button onclick="solveStep()">Indice</button>
+                <button onclick="showSolution()">Voir Solution</button>
+                <button onclick="toggleTimer()" id="timerBtn">Démarrer Timer</button>
+            </div>
+            <div class="loading-indicator" id="loadingIndicator">Génération du puzzle...</div>
+            <div class="timer" id="timerDisplay" style="display: none;">00:00</div>
+            <div class="solve-hint" id="solveHint"></div>
+            <div class="stats">
+                <h3>📊 Statistiques</h3>
+                <div class="stat-row"><span>Tentatives:</span><span class="stat-value" id="attempts">0</span></div>
+                <div class="stat-row"><span>Rotations:</span><span class="stat-value" id="rotations">0</span></div>
+                <div class="stat-row"><span>Temps:</span><span class="stat-value" id="timeStat">0s</span></div>
+            </div>
+        </div>
+        <div class="grid-container">
+            <div class="message info" id="message">Tourne les pièces pour relier E à S !</div>
+            <div class="grid-wrapper" id="gridWrapper">
+                <div class="grid" id="grid"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Configuration du jeu
+        const PIPE_TYPES = [
+            { symbol: '│', connections: [1, 0, 1, 0], name: 'Vertical', desc: 'Connecte haut et bas' },
+            { symbol: '─', connections: [0, 1, 0, 1], name: 'Horizontal', desc: 'Connecte gauche et droite' },
+            { symbol: '┌', connections: [0, 1, 1, 0], name: 'Coin HG', desc: 'Connecte bas et droite' },
+            { symbol: '┐', connections: [0, 0, 1, 1], name: 'Coin HD', desc: 'Connecte bas et gauche' },
+            { symbol: '└', connections: [1, 1, 0, 0], name: 'Coin BG', desc: 'Connecte haut et droite' },
+            { symbol: '┘', connections: [1, 0, 0, 1], name: 'Coin BD', desc: 'Connecte haut et gauche' },
+            { symbol: '┬', connections: [0, 1, 1, 1], name: 'T Bas', desc: 'Connecte bas, droite, gauche' },
+            { symbol: '┴', connections: [1, 1, 0, 1], name: 'T Haut', desc: 'Connecte haut, droite, gauche' },
+            { symbol: '├', connections: [1, 1, 1, 0], name: 'T Droit', desc: 'Connecte haut, bas, droite' },
+            { symbol: '┤', connections: [1, 0, 1, 1], name: 'T Gauche', desc: 'Connecte haut, bas, gauche' },
+            { symbol: '+', connections: [1, 1, 1, 1], name: 'Croisement', desc: 'Connecte les 4 directions' }
+        ];
+
+        const DIRECTIONS = [[-1, 0], [0, 1], [1, 0], [0, -1]];
+        const GRID_SIZE = 16;
+        const EDGE_SIDES = ['top', 'bottom', 'left', 'right'];
+        const MAX_GENERATION_ATTEMPTS = 5;
+
+        const PIPE_TYPES_BY_DIFFICULTY = {
+            easy: PIPE_TYPES.filter(t => ['Vertical','Horizontal','Coin'].some(k => t.name.includes(k))),
+            medium: PIPE_TYPES.filter(t => !t.name.includes('Croisement')),
+            hard: PIPE_TYPES
+        };
+
+        let grid = [], cellElements = [];
+        let startPos = null, endPos = null;
+        let rotationsCount = 0, attemptsCount = 0;
+        let gameStarted = false, timerInterval = null, startTime = null;
+        let difficulty = 'medium', solution = null, solveSteps = [], currentSolveStep = 0;
+        let pendingVisualUpdate = false;
+
+        window.onload = function() { newGame(); updateDifficultyButtons(); };
+
+        function updateDifficultyButtons() {
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.difficulty === difficulty) btn.classList.add('active');
+            });
+        }
+
+        function getDirectionFromSide(side) {
+            switch (side) {
+                case 'top': return 0;
+                case 'right': return 1;
+                case 'bottom': return 2;
+                case 'left': return 3;
+            }
+            return 0;
+        }
+
+        function getRandomEdgePosition() {
+            const side = EDGE_SIDES[Math.floor(Math.random() * EDGE_SIDES.length)];
+            let row, col;
+            switch (side) {
+                case 'top':    row = 0; col = Math.floor(Math.random() * GRID_SIZE); break;
+                case 'bottom': row = GRID_SIZE - 1; col = Math.floor(Math.random() * GRID_SIZE); break;
+                case 'left':   row = Math.floor(Math.random() * GRID_SIZE); col = 0; break;
+                case 'right':  row = Math.floor(Math.random() * GRID_SIZE); col = GRID_SIZE - 1; break;
+            }
+            return { side, row, col };
+        }
+
+        function setDifficulty(diff) {
+            difficulty = diff;
+            updateDifficultyButtons();
+            newGame();
+        }
+
+        function showLoading(isLoading) {
+            document.getElementById('loadingIndicator').style.display = isLoading ? 'block' : 'none';
+            document.getElementById('newGameBtn').disabled = isLoading;
+        }
+
+        function createEdgeMarkers() {
+            const gridWrapper = document.getElementById('gridWrapper');
+            document.querySelectorAll('.edge-marker').forEach(el => el.remove());
+            const cellSize = 40, gap = 2, gridPadding = 5;
+
+            const createMarker = (side, row, col, isStart) => {
+                const marker = document.createElement('div');
+                marker.className = 'edge-marker ' + (isStart ? 'start' : 'end');
+                marker.textContent = isStart ? 'E' : 'S';
+                if (side === 'top') {
+                    marker.style.top = '0px';
+                    marker.style.left = `${gridPadding + col * (cellSize + gap) + cellSize / 2 - 15}px`;
+                    marker.style.transform = 'translateY(-50%)';
+                } else if (side === 'bottom') {
+                    marker.style.bottom = '0px';
+                    marker.style.left = `${gridPadding + col * (cellSize + gap) + cellSize / 2 - 15}px`;
+                    marker.style.transform = 'translateY(50%)';
+                } else if (side === 'left') {
+                    marker.style.left = '0px';
+                    marker.style.top = `${gridPadding + row * (cellSize + gap) + cellSize / 2 - 15}px`;
+                    marker.style.transform = 'translateX(-50%)';
+                } else if (side === 'right') {
+                    marker.style.right = '0px';
+                    marker.style.top = `${gridPadding + row * (cellSize + gap) + cellSize / 2 - 15}px`;
+                    marker.style.transform = 'translateX(50%)';
+                }
+                gridWrapper.appendChild(marker);
+            };
+            createMarker(startPos.side, startPos.row, startPos.col, true);
+            createMarker(endPos.side, endPos.row, endPos.col, false);
+        }
+
+        function createCell(row, col, cellData) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.row = row;
+            cell.dataset.col = col;
+            const pipe = document.createElement('span');
+            pipe.className = 'pipe';
+            pipe.textContent = cellData.type.symbol;
+            pipe.style.transform = `rotate(${cellData.rotation * 90}deg)`;
+            cell.appendChild(pipe);
+            cell.onclick = () => rotateCell(row, col);
+            document.getElementById('grid').appendChild(cell);
+            if (!cellElements[row]) cellElements[row] = [];
+            cellElements[row][col] = cell;
+        }
+
+        function rotateConnections(connections, rotation) {
+            const rotated = [0, 0, 0, 0];
+            for (let i = 0; i < 4; i++) rotated[(i + rotation) % 4] = connections[i];
+            return rotated;
+        }
+
+        function getConnection(cell, direction) {
+            return rotateConnections(cell.type.connections, cell.rotation)[direction];
+        }
+
+        function getGridConnections(gridToCheck) {
+            const connections = [];
+            for (let row = 0; row < GRID_SIZE; row++) {
+                connections[row] = [];
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    connections[row][col] = rotateConnections(
+                        gridToCheck[row][col].type.connections,
+                        gridToCheck[row][col].rotation
+                    );
+                }
+            }
+            return connections;
+        }
+
+        function isGridSolvable(gridToCheck) {
+            const startDir = getDirectionFromSide(startPos.side);
+            const connections = getGridConnections(gridToCheck);
+            if (connections[startPos.row][startPos.col][startDir] !== 1) return false;
+            const endDir = getDirectionFromSide(endPos.side);
+            if (connections[endPos.row][endPos.col][endDir] !== 1) return false;
+            const visited = new Set();
+            const queue = [[startPos.row, startPos.col]];
+            visited.add(`${startPos.row},${startPos.col}`);
+            while (queue.length > 0) {
+                const [row, col] = queue.shift();
+                if (row === endPos.row && col === endPos.col) return true;
+                for (let dir = 0; dir < 4; dir++) {
+                    if (connections[row][col][dir] === 1) {
+                        const [newRow, newCol] = [row + DIRECTIONS[dir][0], col + DIRECTIONS[dir][1]];
+                        if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
+                            const oppositeDir = (dir + 2) % 4;
+                            if (connections[newRow][newCol][oppositeDir] === 1) {
+                                const key = `${newRow},${newCol}`;
+                                if (!visited.has(key)) {
+                                    visited.add(key);
+                                    queue.push([newRow, newCol]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        function generateSolutionPath() {
+            const startTime = Date.now();
+            const TIMEOUT_MS = 500;
+            const visited = new Set();
+            const queue = [[startPos.row, startPos.col, []]];
+            visited.add(`${startPos.row},${startPos.col}`);
+            while (queue.length > 0) {
+                if (Date.now() - startTime > TIMEOUT_MS) return null;
+                const [row, col, path] = queue.shift();
+                if (row === endPos.row && col === endPos.col) return path.concat([[row, col]]);
+                for (let dir = 0; dir < 4; dir++) {
+                    const [newRow, newCol] = [row + DIRECTIONS[dir][0], col + DIRECTIONS[dir][1]];
+                    if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
+                        const key = `${newRow},${newCol}`;
+                        if (!visited.has(key)) {
+                            visited.add(key);
+                            queue.push([newRow, newCol, path.concat([[row, col]])]);
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+        function generateGuaranteedSolution() {
+            const path = generateSolutionPath();
+            if (!path || path.length < 7) return false;
+            const solGrid = [];
+            for (let row = 0; row < GRID_SIZE; row++) {
+                solGrid[row] = [];
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    solGrid[row][col] = { type: grid[row][col].type, rotation: grid[row][col].rotation };
+                }
+            }
+            for (let i = 0; i < path.length; i++) {
+                const [row, col] = path[i];
+                let prevDir = null, nextDir = null;
+                if (i > 0) {
+                    const [prevRow, prevCol] = path[i-1];
+                    if (prevRow === row - 1) prevDir = 0;
+                    else if (prevCol === col + 1) prevDir = 1;
+                    else if (prevRow === row + 1) prevDir = 2;
+                    else if (prevCol === col - 1) prevDir = 3;
+                }
+                if (i < path.length - 1) {
+                    const [nextRow, nextCol] = path[i+1];
+                    if (nextRow === row - 1) nextDir = 0;
+                    else if (nextCol === col + 1) nextDir = 1;
+                    else if (nextRow === row + 1) nextDir = 2;
+                    else if (nextCol === col - 1) nextDir = 3;
+                }
+                let foundRotation = false;
+                for (let rotation = 0; rotation < 4; rotation++) {
+                    const connections = rotateConnections(solGrid[row][col].type.connections, rotation);
+                    if ((prevDir === null || connections[prevDir] === 1) && (nextDir === null || connections[nextDir] === 1)) {
+                        solGrid[row][col].rotation = rotation;
+                        foundRotation = true;
+                        break;
+                    }
+                }
+                if (!foundRotation) {
+                    for (const pipeType of PIPE_TYPES) {
+                        for (let rotation = 0; rotation < 4; rotation++) {
+                            const connections = rotateConnections(pipeType.connections, rotation);
+                            if ((prevDir === null || connections[prevDir] === 1) && (nextDir === null || connections[nextDir] === 1)) {
+                                solGrid[row][col].type = pipeType;
+                                solGrid[row][col].rotation = rotation;
+                                foundRotation = true;
+                                break;
+                            }
+                        }
+                        if (foundRotation) break;
+                    }
+                }
+            }
+            const startDir = getDirectionFromSide(startPos.side);
+            let foundStartRotation = false;
+            for (let r = 0; r < 4; r++) {
+                solGrid[startPos.row][startPos.col].rotation = r;
+                if (getConnection(solGrid[startPos.row][startPos.col], startDir) === 1) {
+                    foundStartRotation = true;
+                    break;
+                }
+            }
+            if (!foundStartRotation) return false;
+            const endDir = getDirectionFromSide(endPos.side);
+            let foundEndRotation = false;
+            for (let r = 0; r < 4; r++) {
+                solGrid[endPos.row][endPos.col].rotation = r;
+                if (getConnection(solGrid[endPos.row][endPos.col], endDir) === 1) {
+                    foundEndRotation = true;
+                    break;
+                }
+            }
+            if (!foundEndRotation) return false;
+            if (isGridSolvable(solGrid)) {
+                solution = solGrid;
+                return true;
+            }
+            return false;
+        }
+
+        function choosePipeType(row, col, isEdgeCell) {
+            if (isEdgeCell) return PIPE_TYPES_BY_DIFFICULTY.easy[Math.floor(Math.random() * PIPE_TYPES_BY_DIFFICULTY.easy.length)];
+            return PIPE_TYPES_BY_DIFFICULTY[difficulty][Math.floor(Math.random() * PIPE_TYPES_BY_DIFFICULTY[difficulty].length)];
+        }
+
+        function newGame() {
+            stopTimer();
+            rotationsCount = attemptsCount = 0;
+            gameStarted = currentSolveStep = 0;
+            solveSteps = []; solution = null;
+            updateStats();
+            document.getElementById('message').className = 'message info';
+            document.getElementById('message').textContent = 'Tourne les pièces pour relier E à S !';
+            document.getElementById('solveHint').textContent = '';
+            showLoading(true);
+            let solutionFound = false;
+            let generationAttempts = 0;
+            while (!solutionFound && generationAttempts < MAX_GENERATION_ATTEMPTS) {
+                generationAttempts++;
+                grid = []; cellElements = [];
+                document.getElementById('grid').innerHTML = '';
+                let startEdge, endEdge, attempts = 0, maxPositionAttempts = 200;
+                do {
+                    startEdge = getRandomEdgePosition();
+                    endEdge = getRandomEdgePosition();
+                    attempts++;
+                    if (attempts >= maxPositionAttempts) {
+                        do { endEdge = getRandomEdgePosition(); }
+                        while (startEdge.side === endEdge.side ||
+                              (startEdge.side === 'left' && endEdge.side === 'right' && Math.abs(startEdge.row - endEdge.row) < 6) ||
+                              (startEdge.side === 'right' && endEdge.side === 'left' && Math.abs(startEdge.row - endEdge.row) < 6) ||
+                              (startEdge.side === 'top' && endEdge.side === 'bottom' && Math.abs(startEdge.col - endEdge.col) < 6) ||
+                              (startEdge.side === 'bottom' && endEdge.side === 'top' && Math.abs(startEdge.col - endEdge.col) < 6));
+                        break;
+                    }
+                } while (!((startEdge.side === 'top' && endEdge.side === 'bottom') ||
+                          (startEdge.side === 'bottom' && endEdge.side === 'top') ||
+                          (startEdge.side === 'left' && endEdge.side === 'right') ||
+                          (startEdge.side === 'right' && endEdge.side === 'left')) ||
+                        (startEdge.side === 'left' && endEdge.side === 'right' && Math.abs(startEdge.row - endEdge.row) < 6) ||
+                        (startEdge.side === 'right' && endEdge.side === 'left' && Math.abs(startEdge.row - endEdge.row) < 6) ||
+                        (startEdge.side === 'top' && endEdge.side === 'bottom' && Math.abs(startEdge.col - endEdge.col) < 6) ||
+                        (startEdge.side === 'bottom' && endEdge.side === 'top' && Math.abs(startEdge.col - endEdge.col) < 6));
+                startPos = startEdge; endPos = endEdge;
+                createEdgeMarkers();
+                for (let row = 0; row < GRID_SIZE; row++) {
+                    grid[row] = [];
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        const isEdgeCell = (row === startPos.row && col === startPos.col) || (row === endPos.row && col === endPos.col);
+                        grid[row][col] = { type: choosePipeType(row, col, isEdgeCell), rotation: Math.floor(Math.random() * 4) };
+                        createCell(row, col, grid[row][col]);
+                    }
+                }
+                if (generateGuaranteedSolution()) solutionFound = true;
+            }
+            showLoading(false);
+            if (!solutionFound) {
+                document.getElementById('message').className = 'message error';
+                document.getElementById('message').textContent = 'Impossible de générer un puzzle valide. Réessayez.';
+                return;
+            }
+            updateConnectionVisual();
+        }
+
+        function rotateCell(row, col) {
+            if (!gameStarted) { gameStarted = true; startTimer(); }
+            const cell = grid[row][col];
+            cell.rotation = (cell.rotation + 1) % 4;
+            cellElements[row][col].querySelector('.pipe').style.transform = `rotate(${cell.rotation * 90}deg)`;
+            rotationsCount++; updateStats();
+            if (isGridSolvable(grid)) winGame();
+            else { attemptsCount++; updateStats(); }
+            if (!pendingVisualUpdate) {
+                pendingVisualUpdate = true;
+                requestAnimationFrame(() => { updateConnectionVisual(); pendingVisualUpdate = false; });
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('rotations').textContent = rotationsCount;
+            document.getElementById('attempts').textContent = attemptsCount;
+        }
+
+        function winGame() {
+            stopTimer(); gameStarted = false;
+            document.getElementById('message').className = 'message success';
+            document.getElementById('message').textContent = '🎉 Félicitations ! Puzzle résolu !';
+            updateConnectionVisual();
+        }
+
+        function startTimer() {
+            if (timerInterval) return;
+            startTime = performance.now();
+            function updateTimer() {
+                const now = performance.now();
+                const elapsed = Math.floor((now - startTime) / 1000);
+                document.getElementById('timerDisplay').textContent = `${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`;
+                document.getElementById('timeStat').textContent = `${elapsed}s`;
+                document.getElementById('timerDisplay').style.display = 'block';
+                timerInterval = requestAnimationFrame(updateTimer);
+            }
+            timerInterval = requestAnimationFrame(updateTimer);
+        }
+
+        function stopTimer() {
+            if (timerInterval) { cancelAnimationFrame(timerInterval); timerInterval = null; document.getElementById('timerDisplay').style.display = 'none'; }
+        }
+
+        function toggleTimer() {
+            if (timerInterval) { stopTimer(); document.getElementById('timerBtn').textContent = 'Démarrer Timer'; }
+            else { startTimer(); document.getElementById('timerBtn').textContent = 'Arrêter Timer'; }
+        }
+        function solveStep() {
+            if (!solution) { document.getElementById('solveHint').textContent = 'Aucune solution trouvée.'; return; }
+            if (solveSteps.length === 0) {
+                solveSteps = [];
+                for (let row = 0; row < GRID_SIZE; row++) {
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        if (!(row === startPos.row && col === startPos.col) && !(row === endPos.row && col === endPos.col)) {
+                            const current = grid[row][col].rotation;
+                            const target = solution[row][col].rotation;
+                            if (current !== target) solveSteps.push({ row, col, rotations: (target - current + 4) % 4 });
+                        }
+                    }
+                }
+                solveSteps.sort(() => Math.random() - 0.5);
+                currentSolveStep = 0;
+            }
+            if (currentSolveStep < solveSteps.length) {
+                const step = solveSteps[currentSolveStep++];
+                cellElements[step.row][step.col].classList.add('selected');
+                setTimeout(() => cellElements[step.row][step.col].classList.remove('selected'), 2000);
+                document.getElementById('solveHint').textContent = `Indice: Tourne (${step.row+1},${step.col+1}) ${step.rotations} fois.`;
+            } else document.getElementById('solveHint').textContent = 'Plus d\'indices.';
+        }
+
+        function showSolution() {
+            if (!solution) { document.getElementById('message').className = 'message error'; document.getElementById('message').textContent = 'Aucune solution trouvée.'; return; }
+            for (let row = 0; row < GRID_SIZE; row++) {
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    if (!(row === startPos.row && col === startPos.col) && !(row === endPos.row && col === endPos.col)) {
+                        grid[row][col].rotation = solution[row][col].rotation;
+                        cellElements[row][col].querySelector('.pipe').style.transform = `rotate(${solution[row][col].rotation * 90}deg)`;
+                    }
+                }
+            }
+            document.getElementById('message').className = 'message success';
+            document.getElementById('message').textContent = 'Solution affichée !';
+            document.getElementById('solveHint').textContent = '';
+            updateConnectionVisual();
+        }
+
+        function updateConnectionVisual() {
+            for (let row = 0; row < GRID_SIZE; row++) {
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    cellElements[row][col].classList.remove('connected', 'path', 'edge-connected');
+                }
+            }
+            const startDir = getDirectionFromSide(startPos.side);
+            if (getConnection(grid[startPos.row][startPos.col], startDir) === 1) {
+                cellElements[startPos.row][startPos.col].classList.add('edge-connected');
+            }
+            const endDir = getDirectionFromSide(endPos.side);
+            const isEndConnected = getConnection(grid[endPos.row][endPos.col], endDir) === 1;
+            if (isEndConnected) cellElements[endPos.row][endPos.col].classList.add('edge-connected');
+            const visited = new Set();
+            const stack = [{row: startPos.row, col: startPos.col, path: [[startPos.row, startPos.col]]}];
+            visited.add(`${startPos.row},${startPos.col}`);
+            let foundPath = false;
+            while (stack.length > 0 && !foundPath) {
+                const {row, col, path} = stack.pop();
+                cellElements[row][col].classList.add('connected');
+                if (row === endPos.row && col === endPos.col) {
+                    if (isEndConnected && path.length <= 50) path.forEach(([r,c]) => cellElements[r][c].classList.add('path'));
+                    foundPath = true; break;
+                }
+                for (let dir = 0; dir; dir++) {
+                    if (getConnection(grid[row][col], dir) === 1) {
+                        const [newRow, newCol] = [row + DIRECTIONS[dir][0], col + DIRECTIONS[dir][1]];
+                        if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
+                            const oppositeDir = (dir + 2) % 4;
+                            if (getConnection(grid[newRow][newCol], oppositeDir) === 1) {
+                                const key = `${newRow},${newCol}`;
+                                if (!visited.has(key)) { visited.add(key); stack.push({row: newRow, col: newCol, path: [...path, [newRow, newCol]]}); }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
