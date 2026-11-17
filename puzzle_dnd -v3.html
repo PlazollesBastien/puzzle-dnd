@@ -13,14 +13,14 @@
             padding: 20px; color: #e0e0e0;
         }
         .edge-marker {
-            position: absolute; width: 30px; height: 30px;
+            position: absolute; width: 34px; height: 34px;
             background: rgba(255, 255, 255, 0.2); border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 1em; z-index: 10; border: 2px solid;
+            font-weight: bold; font-size: 0.72em; z-index: 10; border: 2px solid;
             pointer-events: none;
         }
-        .edge-marker.start { color: #ff6b6b; border-color: #ff6b6b; background: rgba(255, 107, 107, 0.4); }
-        .edge-marker.end { color: #4ecdc4; border-color: #4ecdc4; background: rgba(78, 205, 196, 0.4); }
+        .edge-marker.pair1 { color: #ff6b6b; border-color: #ff6b6b; background: rgba(255, 107, 107, 0.4); }
+        .edge-marker.pair2 { color: #4ecdc4; border-color: #4ecdc4; background: rgba(78, 205, 196, 0.4); }
         h1 { margin-bottom: 20px; color: #ff6b6b; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); font-size: 2.5em; }
         .game-container { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
         .controls {
@@ -36,9 +36,11 @@
         }
         button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(78,205,196,0.4); }
         button:disabled { opacity: 0.6; cursor: not-allowed; }
-        .difficulty-selector { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        .difficulty-btn { padding: 8px 15px; font-size: 0.9em; width: 70px; }
-        .difficulty-btn.active { background: #ff6b6b; box-shadow: 0 0 10px rgba(255,107,107,0.5); }
+        .legend { margin-bottom: 15px; font-size: 0.9em; color: #a0a0a0; }
+        .legend-item { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+        .legend-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+        .legend-dot.pair1 { background: #ff6b6b; box-shadow: 0 0 6px rgba(255, 107, 107, 0.6); }
+        .legend-dot.pair2 { background: #4ecdc4; box-shadow: 0 0 6px rgba(78, 205, 196, 0.6); }
         .stats { background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px; margin-top: 20px; }
         .stats h3 { color: #ff6b6b; margin-bottom: 10px; font-size: 1.1em; }
         .stat-row { display: flex; justify-content: space-between; margin: 5px 0; color: #a0a0a0; }
@@ -49,9 +51,14 @@
         .cell { width: 40px; height: 40px; background: rgba(255,255,255,0.05); border: 1px solid rgba(78,205,196,0.3); border-radius: 5px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; user-select: none; }
         .cell:hover { background: rgba(255,255,255,0.1); border-color: #4ecdc4; transform: scale(1.1); }
         .cell.selected { background: rgba(78,205,196,0.2); border-color: #4ecdc4; box-shadow: 0 0 15px rgba(78,205,196,0.5); }
-        .cell.connected { background: rgba(78,205,196,0.15); border-color: #4ecdc4; }
-        .cell.path { background: linear-gradient(135deg, rgba(78,205,196,0.3), rgba(255,107,107,0.2)); border-color: #ff6b6b; box-shadow: 0 0 10px rgba(78,205,196,0.5); }
-        .cell.edge-connected { background: rgba(255, 255, 255, 0.15); border-color: #ff6b6b; box-shadow: 0 0 8px rgba(255, 107, 107, 0.6); }
+        .cell.connected-1 { background: rgba(255, 107, 107, 0.15); border-color: #ff6b6b; }
+        .cell.connected-2 { background: rgba(78, 205, 196, 0.15); border-color: #4ecdc4; }
+        .cell.path-1 { background: rgba(255, 107, 107, 0.35); border-color: #ff6b6b; box-shadow: 0 0 10px rgba(255, 107, 107, 0.5); }
+        .cell.path-2 { background: rgba(78, 205, 196, 0.35); border-color: #4ecdc4; box-shadow: 0 0 10px rgba(78, 205, 196, 0.5); }
+        .cell.edge-connected-1 { background: rgba(255, 107, 107, 0.25); border-color: #ff6b6b; box-shadow: 0 0 8px rgba(255, 107, 107, 0.6); }
+        .cell.edge-connected-2 { background: rgba(78, 205, 196, 0.25); border-color: #4ecdc4; box-shadow: 0 0 8px rgba(78, 205, 196, 0.6); }
+        .cell.crossing-both { background: rgba(155, 89, 182, 0.35); border-color: #c39bd3; box-shadow: 0 0 8px rgba(155, 89, 182, 0.6); }
+        .cell.crossing-solved { background: rgba(142, 68, 173, 0.55); border-color: #af7ac5; box-shadow: 0 0 12px rgba(175, 122, 197, 0.8); }
         .pipe { font-size: 1.5em; color: #4ecdc4; transition: transform 0.3s; text-shadow: 0 0 5px rgba(78,205,196,0.5); font-family: monospace; line-height: 1; }
         .message { background: rgba(0,0,0,0.5); border-radius: 10px; padding: 15px 30px; margin: 20px 0; text-align: center; font-size: 1.2em; min-height: 60px; display: flex; align-items: center; justify-content: center; }
         .message.success { color: #4ecdc4; background: rgba(78,205,196,0.1); border: 2px solid #4ecdc4; }
@@ -59,7 +66,6 @@
         .message.info { color: #a0a0a0; }
         .timer { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; text-align: center; margin-top: 10px; color: #ff6b6b; font-size: 1.2em; font-weight: bold; }
         .solve-hint { margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; text-align: center; color: #a0a0a0; font-size: 0.9em; }
-        .loading-indicator { display: none; text-align: center; margin: 10px 0; color: #4ecdc4; font-style: italic; }
         @media (max-width: 900px) {
             .game-container { flex-direction: column; align-items: center; }
             .controls { width: 100%; max-width: 500px; }
@@ -67,7 +73,7 @@
             .cell { width: 25px; height: 25px; }
             .pipe { font-size: 1em; }
             .grid-wrapper { min-height: 420px; min-width: 420px; }
-            .edge-marker { width: 20px; height: 20px; font-size: 0.8em; }
+            .edge-marker { width: 22px; height: 22px; font-size: 0.55em; }
         }
     </style>
 </head>
@@ -76,18 +82,16 @@
     <div class="game-container">
         <div class="controls">
             <h2>⚙️ Contrôles</h2>
-            <div class="difficulty-selector">
-                <button class="difficulty-btn" data-difficulty="easy" onclick="setDifficulty('easy')">Facile</button>
-                <button class="difficulty-btn" data-difficulty="medium" onclick="setDifficulty('medium')">Moyen</button>
-                <button class="difficulty-btn active" data-difficulty="hard" onclick="setDifficulty('hard')">Difficile</button>
+            <div class="legend">
+                <div class="legend-item"><span class="legend-dot pair1"></span> Paire 1 : relier E1 à S1</div>
+                <div class="legend-item"><span class="legend-dot pair2"></span> Paire 2 : relier E2 à S2</div>
             </div>
             <div class="button-group">
-                <button onclick="newGame()" id="newGameBtn">Nouvelle Partie</button>
+                <button onclick="newGame()" id="newGameBtn">Réinitialiser</button>
                 <button onclick="solveStep()">Indice</button>
                 <button onclick="showSolution()">Voir Solution</button>
                 <button onclick="toggleTimer()" id="timerBtn">Démarrer Timer</button>
             </div>
-            <div class="loading-indicator" id="loadingIndicator">Génération du puzzle...</div>
             <div class="timer" id="timerDisplay" style="display: none;">00:00</div>
             <div class="solve-hint" id="solveHint"></div>
             <div class="stats">
@@ -98,7 +102,7 @@
             </div>
         </div>
         <div class="grid-container">
-            <div class="message info" id="message">Tourne les pièces pour relier E à S !</div>
+            <div class="message info" id="message">Tourne les pièces pour relier E1 à S1 et E2 à S2 !</div>
             <div class="grid-wrapper" id="gridWrapper">
                 <div class="grid" id="grid"></div>
             </div>
@@ -122,30 +126,83 @@
 
         const DIRECTIONS = [[-1, 0], [0, 1], [1, 0], [0, -1]];
         const GRID_SIZE = 16;
-        const EDGE_SIDES = ['top', 'bottom', 'left', 'right'];
-        const MAX_GENERATION_ATTEMPTS = 5;
 
-        const PIPE_TYPES_BY_DIFFICULTY = {
-            easy: PIPE_TYPES.filter(t => ['Vertical','Horizontal','Coin'].some(k => t.name.includes(k))),
-            medium: PIPE_TYPES.filter(t => !t.name.includes('Croisement')),
-            hard: PIPE_TYPES
-        };
+        const PAIRS = [
+            { id: 1, entry: { side: 'left', row: 12, col: 0 }, exit: { side: 'top', row: 0, col: 9 } },
+            { id: 2, entry: { side: 'right', row: 14, col: 15 }, exit: { side: 'top', row: 0, col: 7 } },
+        ];
+
+        // Niveau fixe : une seule partie prévue, pas de génération aléatoire.
+        // LEVEL_TYPES[r][c] = index dans PIPE_TYPES, LEVEL_ROTATIONS[r][c] = rotation initiale (0-3).
+        const LEVEL_TYPES = [
+            [2, 4, 7, 7, 3, 7, 6, 0, 0, 0, 9, 5, 0, 10, 6, 6],
+            [8, 7, 8, 5, 10, 7, 0, 0, 10, 0, 10, 1, 8, 8, 4, 9],
+            [8, 9, 7, 6, 10, 5, 1, 0, 8, 0, 8, 5, 0, 0, 9, 10],
+            [2, 0, 8, 6, 9, 2, 1, 5, 8, 0, 8, 6, 7, 9, 8, 7],
+            [6, 0, 7, 3, 8, 0, 8, 0, 1, 0, 4, 4, 9, 5, 1, 2],
+            [8, 10, 10, 7, 7, 0, 0, 2, 1, 5, 4, 4, 9, 0, 0, 2],
+            [2, 8, 8, 10, 3, 0, 10, 0, 4, 3, 4, 1, 4, 6, 2, 8],
+            [9, 9, 2, 6, 5, 4, 1, 10, 1, 1, 3, 6, 8, 0, 9, 4],
+            [2, 5, 5, 3, 10, 6, 10, 0, 3, 0, 0, 2, 8, 4, 9, 5],
+            [5, 4, 9, 2, 5, 2, 1, 5, 2, 5, 4, 1, 1, 3, 8, 9],
+            [4, 4, 7, 2, 1, 5, 0, 1, 1, 3, 9, 2, 7, 0, 3, 1],
+            [6, 8, 7, 0, 3, 0, 0, 9, 7, 5, 1, 5, 1, 0, 9, 10],
+            [1, 1, 1, 5, 3, 5, 4, 7, 10, 3, 4, 5, 5, 4, 1, 3],
+            [9, 3, 0, 6, 4, 1, 10, 4, 7, 2, 8, 1, 2, 2, 4, 0],
+            [8, 2, 2, 5, 2, 6, 0, 4, 10, 6, 8, 8, 0, 5, 4, 4],
+            [10, 9, 0, 9, 9, 2, 4, 9, 2, 3, 0, 8, 8, 10, 3, 7]
+        ];
+
+        const LEVEL_ROTATIONS = [
+            [0, 0, 3, 3, 0, 0, 3, 3, 3, 1, 0, 0, 0, 0, 1, 0],
+            [1, 3, 1, 1, 1, 2, 3, 3, 0, 1, 2, 2, 3, 1, 2, 3],
+            [3, 0, 1, 3, 1, 2, 3, 3, 0, 1, 3, 3, 3, 2, 3, 1],
+            [1, 1, 1, 2, 2, 2, 1, 2, 1, 3, 1, 0, 2, 1, 3, 2],
+            [2, 2, 0, 1, 1, 1, 2, 0, 0, 1, 1, 0, 1, 2, 1, 2],
+            [1, 2, 2, 2, 3, 1, 2, 2, 3, 1, 0, 1, 3, 1, 3, 0],
+            [3, 3, 1, 3, 0, 3, 3, 1, 1, 0, 0, 2, 1, 2, 0, 0],
+            [1, 3, 0, 1, 0, 1, 3, 3, 1, 1, 3, 2, 3, 2, 3, 0],
+            [1, 1, 3, 2, 0, 2, 3, 3, 0, 0, 1, 1, 1, 2, 2, 2],
+            [0, 1, 3, 0, 0, 2, 1, 2, 1, 0, 3, 3, 1, 3, 1, 0],
+            [2, 0, 2, 1, 1, 2, 0, 3, 0, 1, 3, 0, 1, 3, 1, 3],
+            [2, 2, 2, 1, 2, 0, 2, 2, 3, 3, 0, 3, 2, 1, 3, 2],
+            [1, 3, 1, 2, 1, 0, 0, 0, 2, 3, 0, 1, 2, 1, 1, 3],
+            [0, 1, 1, 0, 0, 0, 0, 2, 3, 0, 2, 1, 1, 2, 0, 3],
+            [2, 1, 0, 1, 2, 1, 1, 0, 3, 2, 3, 3, 3, 1, 3, 1],
+            [3, 0, 2, 1, 1, 2, 3, 3, 0, 3, 1, 2, 3, 1, 2, 3]
+        ];
+
+        // PATH_MASK[r][c] === '1' : cellule d'un chemin solution (rotation solution = 0).
+        const PATH_MASK = [
+            "0000000101000000",
+            "0000000101000000",
+            "0000000101000000",
+            "0000011101000000",
+            "0000010001000000",
+            "0000010111000000",
+            "0000010100000000",
+            "0000011111100000",
+            "0000000100100000",
+            "0000011100111100",
+            "0001110000000100",
+            "0001000000000100",
+            "1111000000000111",
+            "0000000000000001",
+            "0000000000000001",
+            "0000000000000000"
+        ];
+
+        // Cellules où les deux chemins se croisent (violet quand les deux paires y passent).
+        const CROSSINGS = [[7, 7]];
 
         let grid = [], cellElements = [];
-        let startPos = null, endPos = null;
         let rotationsCount = 0, attemptsCount = 0;
         let gameStarted = false, timerInterval = null, startTime = null;
-        let difficulty = 'medium', solution = null, solveSteps = [], currentSolveStep = 0;
+        let solution = null, solveSteps = [], currentSolveStep = 0;
         let pendingVisualUpdate = false;
 
-        window.onload = function() { newGame(); updateDifficultyButtons(); };
-
-        function updateDifficultyButtons() {
-            document.querySelectorAll('.difficulty-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.difficulty === difficulty) btn.classList.add('active');
-            });
-        }
+        window.onload = function() { newGame(); };
+        window.onresize = function() { if (cellElements.length > 0) createEdgeMarkers(); };
 
         function getDirectionFromSide(side) {
             switch (side) {
@@ -157,59 +214,42 @@
             return 0;
         }
 
-        function getRandomEdgePosition() {
-            const side = EDGE_SIDES[Math.floor(Math.random() * EDGE_SIDES.length)];
-            let row, col;
-            switch (side) {
-                case 'top':    row = 0; col = Math.floor(Math.random() * GRID_SIZE); break;
-                case 'bottom': row = GRID_SIZE - 1; col = Math.floor(Math.random() * GRID_SIZE); break;
-                case 'left':   row = Math.floor(Math.random() * GRID_SIZE); col = 0; break;
-                case 'right':  row = Math.floor(Math.random() * GRID_SIZE); col = GRID_SIZE - 1; break;
-            }
-            return { side, row, col };
-        }
-
-        function setDifficulty(diff) {
-            difficulty = diff;
-            updateDifficultyButtons();
-            newGame();
-        }
-
-        function showLoading(isLoading) {
-            document.getElementById('loadingIndicator').style.display = isLoading ? 'block' : 'none';
-            document.getElementById('newGameBtn').disabled = isLoading;
-        }
-
         function createEdgeMarkers() {
             const gridWrapper = document.getElementById('gridWrapper');
             document.querySelectorAll('.edge-marker').forEach(el => el.remove());
-            const cellSize = 40, gap = 2, gridPadding = 5;
+            const wrapperRect = gridWrapper.getBoundingClientRect();
 
-            const createMarker = (side, row, col, isStart) => {
+            const createMarker = (side, row, col, pairId, isEntry) => {
                 const marker = document.createElement('div');
-                marker.className = 'edge-marker ' + (isStart ? 'start' : 'end');
-                marker.textContent = isStart ? 'E' : 'S';
+                marker.className = `edge-marker pair${pairId}`;
+                marker.textContent = (isEntry ? 'E' : 'S') + pairId;
+                gridWrapper.appendChild(marker);
+                const half = marker.offsetWidth / 2;
+                const cellRect = cellElements[row][col].getBoundingClientRect();
+                const cx = cellRect.left - wrapperRect.left + cellRect.width / 2;
+                const cy = cellRect.top - wrapperRect.top + cellRect.height / 2;
                 if (side === 'top') {
                     marker.style.top = '0px';
-                    marker.style.left = `${gridPadding + col * (cellSize + gap) + cellSize / 2 - 15}px`;
+                    marker.style.left = `${cx - half}px`;
                     marker.style.transform = 'translateY(-50%)';
                 } else if (side === 'bottom') {
                     marker.style.bottom = '0px';
-                    marker.style.left = `${gridPadding + col * (cellSize + gap) + cellSize / 2 - 15}px`;
+                    marker.style.left = `${cx - half}px`;
                     marker.style.transform = 'translateY(50%)';
                 } else if (side === 'left') {
                     marker.style.left = '0px';
-                    marker.style.top = `${gridPadding + row * (cellSize + gap) + cellSize / 2 - 15}px`;
+                    marker.style.top = `${cy - half}px`;
                     marker.style.transform = 'translateX(-50%)';
                 } else if (side === 'right') {
                     marker.style.right = '0px';
-                    marker.style.top = `${gridPadding + row * (cellSize + gap) + cellSize / 2 - 15}px`;
+                    marker.style.top = `${cy - half}px`;
                     marker.style.transform = 'translateX(50%)';
                 }
-                gridWrapper.appendChild(marker);
             };
-            createMarker(startPos.side, startPos.row, startPos.col, true);
-            createMarker(endPos.side, endPos.row, endPos.col, false);
+            PAIRS.forEach(pair => {
+                createMarker(pair.entry.side, pair.entry.row, pair.entry.col, pair.id, true);
+                createMarker(pair.exit.side, pair.exit.row, pair.exit.col, pair.id, false);
+            });
         }
 
         function createCell(row, col, cellData) {
@@ -252,18 +292,18 @@
             return connections;
         }
 
-        function isGridSolvable(gridToCheck) {
-            const startDir = getDirectionFromSide(startPos.side);
+        function isPairSolved(gridToCheck, pair) {
             const connections = getGridConnections(gridToCheck);
-            if (connections[startPos.row][startPos.col][startDir] !== 1) return false;
-            const endDir = getDirectionFromSide(endPos.side);
-            if (connections[endPos.row][endPos.col][endDir] !== 1) return false;
+            const entryDir = getDirectionFromSide(pair.entry.side);
+            if (connections[pair.entry.row][pair.entry.col][entryDir] !== 1) return false;
+            const exitDir = getDirectionFromSide(pair.exit.side);
+            if (connections[pair.exit.row][pair.exit.col][exitDir] !== 1) return false;
             const visited = new Set();
-            const queue = [[startPos.row, startPos.col]];
-            visited.add(`${startPos.row},${startPos.col}`);
+            const queue = [[pair.entry.row, pair.entry.col]];
+            visited.add(`${pair.entry.row},${pair.entry.col}`);
             while (queue.length > 0) {
                 const [row, col] = queue.shift();
-                if (row === endPos.row && col === endPos.col) return true;
+                if (row === pair.exit.row && col === pair.exit.col) return true;
                 for (let dir = 0; dir < 4; dir++) {
                     if (connections[row][col][dir] === 1) {
                         const [newRow, newCol] = [row + DIRECTIONS[dir][0], col + DIRECTIONS[dir][1]];
@@ -283,168 +323,44 @@
             return false;
         }
 
-        function generateSolutionPath() {
-            const startTime = Date.now();
-            const TIMEOUT_MS = 500;
-            const visited = new Set();
-            const queue = [[startPos.row, startPos.col, []]];
-            visited.add(`${startPos.row},${startPos.col}`);
-            while (queue.length > 0) {
-                if (Date.now() - startTime > TIMEOUT_MS) return null;
-                const [row, col, path] = queue.shift();
-                if (row === endPos.row && col === endPos.col) return path.concat([[row, col]]);
-                for (let dir = 0; dir < 4; dir++) {
-                    const [newRow, newCol] = [row + DIRECTIONS[dir][0], col + DIRECTIONS[dir][1]];
-                    if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
-                        const key = `${newRow},${newCol}`;
-                        if (!visited.has(key)) {
-                            visited.add(key);
-                            queue.push([newRow, newCol, path.concat([[row, col]])]);
-                        }
-                    }
-                }
-            }
-            return null;
+        function allPairsSolved(gridToCheck) {
+            return PAIRS.every(pair => isPairSolved(gridToCheck, pair));
         }
-        function generateGuaranteedSolution() {
-            const path = generateSolutionPath();
-            if (!path || path.length < 7) return false;
+
+        function buildSolution() {
             const solGrid = [];
             for (let row = 0; row < GRID_SIZE; row++) {
                 solGrid[row] = [];
                 for (let col = 0; col < GRID_SIZE; col++) {
-                    solGrid[row][col] = { type: grid[row][col].type, rotation: grid[row][col].rotation };
+                    solGrid[row][col] = {
+                        type: grid[row][col].type,
+                        rotation: PATH_MASK[row][col] === '1' ? 0 : grid[row][col].rotation
+                    };
                 }
             }
-            for (let i = 0; i < path.length; i++) {
-                const [row, col] = path[i];
-                let prevDir = null, nextDir = null;
-                if (i > 0) {
-                    const [prevRow, prevCol] = path[i-1];
-                    if (prevRow === row - 1) prevDir = 0;
-                    else if (prevCol === col + 1) prevDir = 1;
-                    else if (prevRow === row + 1) prevDir = 2;
-                    else if (prevCol === col - 1) prevDir = 3;
-                }
-                if (i < path.length - 1) {
-                    const [nextRow, nextCol] = path[i+1];
-                    if (nextRow === row - 1) nextDir = 0;
-                    else if (nextCol === col + 1) nextDir = 1;
-                    else if (nextRow === row + 1) nextDir = 2;
-                    else if (nextCol === col - 1) nextDir = 3;
-                }
-                let foundRotation = false;
-                for (let rotation = 0; rotation < 4; rotation++) {
-                    const connections = rotateConnections(solGrid[row][col].type.connections, rotation);
-                    if ((prevDir === null || connections[prevDir] === 1) && (nextDir === null || connections[nextDir] === 1)) {
-                        solGrid[row][col].rotation = rotation;
-                        foundRotation = true;
-                        break;
-                    }
-                }
-                if (!foundRotation) {
-                    for (const pipeType of PIPE_TYPES) {
-                        for (let rotation = 0; rotation < 4; rotation++) {
-                            const connections = rotateConnections(pipeType.connections, rotation);
-                            if ((prevDir === null || connections[prevDir] === 1) && (nextDir === null || connections[nextDir] === 1)) {
-                                solGrid[row][col].type = pipeType;
-                                solGrid[row][col].rotation = rotation;
-                                foundRotation = true;
-                                break;
-                            }
-                        }
-                        if (foundRotation) break;
-                    }
-                }
-            }
-            const startDir = getDirectionFromSide(startPos.side);
-            let foundStartRotation = false;
-            for (let r = 0; r < 4; r++) {
-                solGrid[startPos.row][startPos.col].rotation = r;
-                if (getConnection(solGrid[startPos.row][startPos.col], startDir) === 1) {
-                    foundStartRotation = true;
-                    break;
-                }
-            }
-            if (!foundStartRotation) return false;
-            const endDir = getDirectionFromSide(endPos.side);
-            let foundEndRotation = false;
-            for (let r = 0; r < 4; r++) {
-                solGrid[endPos.row][endPos.col].rotation = r;
-                if (getConnection(solGrid[endPos.row][endPos.col], endDir) === 1) {
-                    foundEndRotation = true;
-                    break;
-                }
-            }
-            if (!foundEndRotation) return false;
-            if (isGridSolvable(solGrid)) {
-                solution = solGrid;
-                return true;
-            }
-            return false;
-        }
-
-        function choosePipeType(row, col, isEdgeCell) {
-            if (isEdgeCell) return PIPE_TYPES_BY_DIFFICULTY.easy[Math.floor(Math.random() * PIPE_TYPES_BY_DIFFICULTY.easy.length)];
-            return PIPE_TYPES_BY_DIFFICULTY[difficulty][Math.floor(Math.random() * PIPE_TYPES_BY_DIFFICULTY[difficulty].length)];
+            return solGrid;
         }
 
         function newGame() {
             stopTimer();
             rotationsCount = attemptsCount = 0;
             gameStarted = currentSolveStep = 0;
-            solveSteps = []; solution = null;
+            solveSteps = [];
             updateStats();
             document.getElementById('message').className = 'message info';
-            document.getElementById('message').textContent = 'Tourne les pièces pour relier E à S !';
+            document.getElementById('message').textContent = 'Tourne les pièces pour relier E1 à S1 et E2 à S2 !';
             document.getElementById('solveHint').textContent = '';
-            showLoading(true);
-            let solutionFound = false;
-            let generationAttempts = 0;
-            while (!solutionFound && generationAttempts < MAX_GENERATION_ATTEMPTS) {
-                generationAttempts++;
-                grid = []; cellElements = [];
-                document.getElementById('grid').innerHTML = '';
-                let startEdge, endEdge, attempts = 0, maxPositionAttempts = 200;
-                do {
-                    startEdge = getRandomEdgePosition();
-                    endEdge = getRandomEdgePosition();
-                    attempts++;
-                    if (attempts >= maxPositionAttempts) {
-                        do { endEdge = getRandomEdgePosition(); }
-                        while (startEdge.side === endEdge.side ||
-                              (startEdge.side === 'left' && endEdge.side === 'right' && Math.abs(startEdge.row - endEdge.row) < 6) ||
-                              (startEdge.side === 'right' && endEdge.side === 'left' && Math.abs(startEdge.row - endEdge.row) < 6) ||
-                              (startEdge.side === 'top' && endEdge.side === 'bottom' && Math.abs(startEdge.col - endEdge.col) < 6) ||
-                              (startEdge.side === 'bottom' && endEdge.side === 'top' && Math.abs(startEdge.col - endEdge.col) < 6));
-                        break;
-                    }
-                } while (!((startEdge.side === 'top' && endEdge.side === 'bottom') ||
-                          (startEdge.side === 'bottom' && endEdge.side === 'top') ||
-                          (startEdge.side === 'left' && endEdge.side === 'right') ||
-                          (startEdge.side === 'right' && endEdge.side === 'left')) ||
-                        (startEdge.side === 'left' && endEdge.side === 'right' && Math.abs(startEdge.row - endEdge.row) < 6) ||
-                        (startEdge.side === 'right' && endEdge.side === 'left' && Math.abs(startEdge.row - endEdge.row) < 6) ||
-                        (startEdge.side === 'top' && endEdge.side === 'bottom' && Math.abs(startEdge.col - endEdge.col) < 6) ||
-                        (startEdge.side === 'bottom' && endEdge.side === 'top' && Math.abs(startEdge.col - endEdge.col) < 6));
-                startPos = startEdge; endPos = endEdge;
-                createEdgeMarkers();
-                for (let row = 0; row < GRID_SIZE; row++) {
-                    grid[row] = [];
-                    for (let col = 0; col < GRID_SIZE; col++) {
-                        const isEdgeCell = (row === startPos.row && col === startPos.col) || (row === endPos.row && col === endPos.col);
-                        grid[row][col] = { type: choosePipeType(row, col, isEdgeCell), rotation: Math.floor(Math.random() * 4) };
-                        createCell(row, col, grid[row][col]);
-                    }
+            grid = []; cellElements = [];
+            document.getElementById('grid').innerHTML = '';
+            for (let row = 0; row < GRID_SIZE; row++) {
+                grid[row] = [];
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    grid[row][col] = { type: PIPE_TYPES[LEVEL_TYPES[row][col]], rotation: LEVEL_ROTATIONS[row][col] };
+                    createCell(row, col, grid[row][col]);
                 }
-                if (generateGuaranteedSolution()) solutionFound = true;
             }
-            showLoading(false);
-            if (!solutionFound) {
-                document.getElementById('message').className = 'message error';
-                document.getElementById('message').textContent = 'Impossible de générer un puzzle valide. Réessayez.';
-                return;
-            }
+            createEdgeMarkers();
+            solution = buildSolution();
             updateConnectionVisual();
         }
 
@@ -454,8 +370,8 @@
             cell.rotation = (cell.rotation + 1) % 4;
             cellElements[row][col].querySelector('.pipe').style.transform = `rotate(${cell.rotation * 90}deg)`;
             rotationsCount++; updateStats();
-            if (isGridSolvable(grid)) winGame();
-            else { attemptsCount++; updateStats(); }
+            if (allPairsSolved(grid)) winGame();
+            else { attemptsCount++; updateStats(); updatePairMessage(); }
             if (!pendingVisualUpdate) {
                 pendingVisualUpdate = true;
                 requestAnimationFrame(() => { updateConnectionVisual(); pendingVisualUpdate = false; });
@@ -467,10 +383,21 @@
             document.getElementById('attempts').textContent = attemptsCount;
         }
 
+        function updatePairMessage() {
+            const solvedIds = PAIRS.filter(pair => isPairSolved(grid, pair)).map(pair => pair.id);
+            if (solvedIds.length === 0) return;
+            const remainingIds = PAIRS.filter(pair => solvedIds.indexOf(pair.id) === -1).map(pair => pair.id);
+            const msg = document.getElementById('message');
+            msg.className = 'message info';
+            msg.textContent = remainingIds.length === 0
+                ? 'Toutes les paires sont reliées !'
+                : `Paire ${solvedIds.join(', ')} reliée ✓ — il reste la paire ${remainingIds.join(', ')} à relier.`;
+        }
+
         function winGame() {
             stopTimer(); gameStarted = false;
             document.getElementById('message').className = 'message success';
-            document.getElementById('message').textContent = '🎉 Félicitations ! Puzzle résolu !';
+            document.getElementById('message').textContent = '🎉 Félicitations ! Les deux paires sont reliées !';
             updateConnectionVisual();
         }
 
@@ -496,20 +423,22 @@
             if (timerInterval) { stopTimer(); document.getElementById('timerBtn').textContent = 'Démarrer Timer'; }
             else { startTimer(); document.getElementById('timerBtn').textContent = 'Arrêter Timer'; }
         }
+
         function solveStep() {
             if (!solution) { document.getElementById('solveHint').textContent = 'Aucune solution trouvée.'; return; }
             if (solveSteps.length === 0) {
                 solveSteps = [];
                 for (let row = 0; row < GRID_SIZE; row++) {
                     for (let col = 0; col < GRID_SIZE; col++) {
-                        if (!(row === startPos.row && col === startPos.col) && !(row === endPos.row && col === endPos.col)) {
-                            const current = grid[row][col].rotation;
-                            const target = solution[row][col].rotation;
-                            if (current !== target) solveSteps.push({ row, col, rotations: (target - current + 4) % 4 });
-                        }
+                        const current = grid[row][col].rotation;
+                        const target = solution[row][col].rotation;
+                        if (current !== target) solveSteps.push({ row, col, rotations: (target - current + 4) % 4 });
                     }
                 }
-                solveSteps.sort(() => Math.random() - 0.5);
+                for (let i = solveSteps.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [solveSteps[i], solveSteps[j]] = [solveSteps[j], solveSteps[i]];
+                }
                 currentSolveStep = 0;
             }
             if (currentSolveStep < solveSteps.length) {
@@ -524,10 +453,8 @@
             if (!solution) { document.getElementById('message').className = 'message error'; document.getElementById('message').textContent = 'Aucune solution trouvée.'; return; }
             for (let row = 0; row < GRID_SIZE; row++) {
                 for (let col = 0; col < GRID_SIZE; col++) {
-                    if (!(row === startPos.row && col === startPos.col) && !(row === endPos.row && col === endPos.col)) {
-                        grid[row][col].rotation = solution[row][col].rotation;
-                        cellElements[row][col].querySelector('.pipe').style.transform = `rotate(${solution[row][col].rotation * 90}deg)`;
-                    }
+                    grid[row][col].rotation = solution[row][col].rotation;
+                    cellElements[row][col].querySelector('.pipe').style.transform = `rotate(${solution[row][col].rotation * 90}deg)`;
                 }
             }
             document.getElementById('message').className = 'message success';
@@ -539,41 +466,49 @@
         function updateConnectionVisual() {
             for (let row = 0; row < GRID_SIZE; row++) {
                 for (let col = 0; col < GRID_SIZE; col++) {
-                    cellElements[row][col].classList.remove('connected', 'path', 'edge-connected');
+                    cellElements[row][col].classList.remove('connected-1', 'connected-2', 'path-1', 'path-2', 'edge-connected-1', 'edge-connected-2', 'crossing-both', 'crossing-solved');
                 }
             }
-            const startDir = getDirectionFromSide(startPos.side);
-            if (getConnection(grid[startPos.row][startPos.col], startDir) === 1) {
-                cellElements[startPos.row][startPos.col].classList.add('edge-connected');
-            }
-            const endDir = getDirectionFromSide(endPos.side);
-            const isEndConnected = getConnection(grid[endPos.row][endPos.col], endDir) === 1;
-            if (isEndConnected) cellElements[endPos.row][endPos.col].classList.add('edge-connected');
-            const visited = new Set();
-            const stack = [{row: startPos.row, col: startPos.col, path: [[startPos.row, startPos.col]]}];
-            visited.add(`${startPos.row},${startPos.col}`);
-            let foundPath = false;
-            while (stack.length > 0 && !foundPath) {
-                const {row, col, path} = stack.pop();
-                cellElements[row][col].classList.add('connected');
-                if (row === endPos.row && col === endPos.col) {
-                    if (isEndConnected && path.length <= 50) path.forEach(([r,c]) => cellElements[r][c].classList.add('path'));
-                    foundPath = true; break;
+            PAIRS.forEach(pair => {
+                const entryDir = getDirectionFromSide(pair.entry.side);
+                if (getConnection(grid[pair.entry.row][pair.entry.col], entryDir) === 1) {
+                    cellElements[pair.entry.row][pair.entry.col].classList.add(`edge-connected-${pair.id}`);
                 }
-                for (let dir = 0; dir; dir++) {
-                    if (getConnection(grid[row][col], dir) === 1) {
-                        const [newRow, newCol] = [row + DIRECTIONS[dir][0], col + DIRECTIONS[dir][1]];
-                        if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
-                            const oppositeDir = (dir + 2) % 4;
-                            if (getConnection(grid[newRow][newCol], oppositeDir) === 1) {
-                                const key = `${newRow},${newCol}`;
-                                if (!visited.has(key)) { visited.add(key); stack.push({row: newRow, col: newCol, path: [...path, [newRow, newCol]]}); }
+                const exitDir = getDirectionFromSide(pair.exit.side);
+                const isExitConnected = getConnection(grid[pair.exit.row][pair.exit.col], exitDir) === 1;
+                if (isExitConnected) cellElements[pair.exit.row][pair.exit.col].classList.add(`edge-connected-${pair.id}`);
+                const visited = new Set();
+                const stack = [{row: pair.entry.row, col: pair.entry.col, path: [[pair.entry.row, pair.entry.col]]}];
+                visited.add(`${pair.entry.row},${pair.entry.col}`);
+                let foundPath = false;
+                while (stack.length > 0 && !foundPath) {
+                    const {row, col, path} = stack.pop();
+                    cellElements[row][col].classList.add(`connected-${pair.id}`);
+                    if (row === pair.exit.row && col === pair.exit.col) {
+                        if (isExitConnected && path.length <= 50) path.forEach(([r, c]) => cellElements[r][c].classList.add(`path-${pair.id}`));
+                        foundPath = true; break;
+                    }
+                    for (let dir = 0; dir < 4; dir++) {
+                        if (getConnection(grid[row][col], dir) === 1) {
+                            const [newRow, newCol] = [row + DIRECTIONS[dir][0], col + DIRECTIONS[dir][1]];
+                            if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
+                                const oppositeDir = (dir + 2) % 4;
+                                if (getConnection(grid[newRow][newCol], oppositeDir) === 1) {
+                                    const key = `${newRow},${newCol}`;
+                                    if (!visited.has(key)) { visited.add(key); stack.push({row: newRow, col: newCol, path: [...path, [newRow, newCol]]}); }
+                                }
                             }
                         }
                     }
                 }
-            }
+            });
+            CROSSINGS.forEach(([cr, cc]) => {
+                const cl = cellElements[cr][cc].classList;
+                if (cl.contains('connected-1') && cl.contains('connected-2')) cl.add('crossing-both');
+                if (cl.contains('path-1') && cl.contains('path-2')) cl.add('crossing-solved');
+            });
         }
+
     </script>
 </body>
 </html>
